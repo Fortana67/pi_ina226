@@ -3,9 +3,9 @@
 Supports the Raspberry Pi using the I2C bus.
 """
 import logging
+import time
 from math import trunc
-# from smbus import SMBus
-from smbus2 import SMBus
+import Adafruit_GPIO.I2C as I2C
 
 
 def to_bytes(register_value):
@@ -132,7 +132,7 @@ class INA226:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(log_level)
         self._address = address
-        self._i2c = SMBus(busnum)
+        self._i2c = I2C.get_i2c_device(address=address, busnum=busnum)
         self._shunt_ohms = shunt_ohms
         self._max_expected_amps = max_expected_amps
         self._min_device_current_lsb = self._calculate_min_current_lsb()
@@ -197,6 +197,8 @@ class INA226:
         """Put the INA226 into power down mode."""
         configuration = self._read_configuration()
         self._configuration_register(configuration & 0xFFF8)
+        # 40us delay to recover from powerdown (p14 of spec)
+        time.sleep(0.00004)
 
     def wake(self, mode=__CONT_SH_BUS):
         """Wake the INA226 from power down mode."""
@@ -342,24 +344,22 @@ class INA226:
         return self.__read_register(self.__REG_DIE_ID)
 
     def __write_register(self, register, register_value):
-        register_bytes = to_bytes(register_value)
+        register_bytes = self.__to_bytes(register_value)
         self.logger.debug(
             "write register 0x%02x: 0x%04x 0b%s" %
-            (register, register_value, binary_as_string(register_value)))
-        self._i2c.write_i2c_block_data(self._address, register, register_bytes)
-        # self._i2c.write_word_data(self._address, register, register_value)
+            (register, register_value, self.__binary_as_string(register_value)))
+        self._i2c.writeList(register, register_bytes)
 
     def __read_register(self, register, negative_value_supported=False):
-        result = self._i2c.read_word_data(self._address, register) & 0xFFFF
-        register_value = ((result << 8) & 0xFF00) + (result >> 8)
         if negative_value_supported:
-            if register_value > 32767:
-                register_value -= 65536
+            register_value = self._i2c.readS16BE(register)
+        else:
+            register_value = self._i2c.readU16BE(register)
         self.logger.debug(
             "read register 0x%02x: 0x%04x 0b%s" %
-            (register, register_value, binary_as_string(register_value)))
+            (register, register_value,
+             self.__binary_as_string(register_value)))
         return register_value
-
 
 class DeviceRangeError(Exception):
     """Class containing the INA226 error functionality."""
