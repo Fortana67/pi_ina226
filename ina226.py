@@ -344,10 +344,10 @@ class INA226:
         return self.__read_register(self.__REG_DIE_ID)
 
     def __write_register(self, register, register_value):
-        register_bytes = self.__to_bytes(register_value)
+        register_bytes = to_bytes(register_value)
         self.logger.debug(
             "write register 0x%02x: 0x%04x 0b%s" %
-            (register, register_value, self.__binary_as_string(register_value)))
+            (register, register_value, binary_as_string(register_value)))
         self._i2c.writeList(register, register_bytes)
 
     def __read_register(self, register, negative_value_supported=False):
@@ -357,8 +357,7 @@ class INA226:
             register_value = self._i2c.readU16BE(register)
         self.logger.debug(
             "read register 0x%02x: 0x%04x 0b%s" %
-            (register, register_value,
-             self.__binary_as_string(register_value)))
+            (register, register_value, binary_as_string(register_value)))
         return register_value
 
 class DeviceRangeError(Exception):
