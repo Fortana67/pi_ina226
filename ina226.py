@@ -203,7 +203,7 @@ class INA226:
         configuration = self._read_configuration()
         self._configuration_register(configuration & 0xFFF8 | mode)
         # 50ms delay to recover from powerdown and start conversion
-        time.sleep(0.05)
+        # time.sleep(0.05)
 
     def current_overflow(self):
         """Return true if the sensor has detect current overflow.
