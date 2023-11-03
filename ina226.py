@@ -196,7 +196,7 @@ class INA226:
     def sleep(self):
         """Put the INA226 into power down mode."""
         configuration = self._read_configuration()
-        self._configuration_register(configuration & 0xFFFC)
+        self._configuration_register(configuration & 0xFFF8)
 
     def wake(self, mode=__CONT_SH_BUS):
         """Wake the INA226 from power down mode."""
