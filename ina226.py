@@ -196,16 +196,12 @@ class INA226:
     def sleep(self):
         """Put the INA226 into power down mode."""
         configuration = self._read_configuration()
-        self._configuration_register(configuration & 0xFFF8)
-        # 40us delay to recover from powerdown (p14 of spec)
-        time.sleep(0.00004)
+        self._configuration_register(configuration & 0xFFFC)
 
     def wake(self, mode=__CONT_SH_BUS):
         """Wake the INA226 from power down mode."""
         configuration = self._read_configuration()
         self._configuration_register(configuration & 0xFFF8 | mode)
-        # 1ms delay to recover from powerdown (wait for conversion)
-        time.sleep(0.001)
 
     def current_overflow(self):
         """Return true if the sensor has detect current overflow.
